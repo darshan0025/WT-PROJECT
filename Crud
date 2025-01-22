@@ -1,0 +1,162 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CrudExample(),
+    );
+  }
+}
+
+class CrudExample extends StatefulWidget {
+  @override
+  _CrudExampleState createState() => _CrudExampleState();
+}
+
+class _CrudExampleState extends State<CrudExample> {
+  final List<String> items = [];
+  final TextEditingController controller = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+
+  void addItem(String item) {
+    setState(() {
+      items.add(item);
+    });
+    controller.clear();
+  }
+
+  void updateItem(int index, String newItem) {
+    setState(() {
+      items[index] = newItem;
+    });
+  }
+
+  void deleteItem(int index) {
+    setState(() {
+      items.removeAt(index);
+    });
+  }
+
+  void showEditDialog(int index) {
+    controller.text = items[index];
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Item'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: 'Enter new item'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                updateItem(index, controller.text);
+                Navigator.pop(context);
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredItems = items
+        .where((item) => item.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('CRUD with Search'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Search items',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: 'Enter item',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    if (controller.text.isNotEmpty) {
+                      addItem(controller.text);
+                    }
+                  },
+                  child: Text('Add'),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredItems.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(filteredItems[index]),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          showEditDialog(items.indexOf(filteredItems[index]));
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          deleteItem(items.indexOf(filteredItems[index]));
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
